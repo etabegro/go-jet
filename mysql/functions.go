@@ -105,6 +105,12 @@ var SUMi = jet.SUMi
 // SUMf is aggregate function. Returns sum of float expression.
 var SUMf = jet.SUMf
 
+// JSON_ARRAYAGG is an aggregate grouping function. Returns a JSON array containing an aggregated result set as value.
+var JSON_ARRAYAGG = jet.JSON_ARRAYAGG
+
+// JSON_OBJECT creates a JSON object from the given columns.
+var JSON_OBJECT = jet.JSON_OBJECT
+
 // -------------------- Window functions -----------------------//
 
 // ROW_NUMBER returns number of the current row within its partition, counting from 1

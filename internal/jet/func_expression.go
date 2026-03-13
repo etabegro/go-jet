@@ -167,6 +167,16 @@ func SUMi(integerExpression IntegerExpression) integerWindowExpression {
 	return newIntegerWindowFunc("SUM", integerExpression)
 }
 
+// JSON_ARRAYAGG is an aggregate grouping function. Returns a JSON array containing an aggregated result set as value.
+func JSON_ARRAYAGG(projections ...Projection) JsonArrayExpression {
+	return newJsonArrayExpression(projections...)
+}
+
+// JSON_OBJECT creates a JSON object from the given columns.
+func JSON_OBJECT(projections ...Projection) Expression {
+	return Func("JSON_OBJECT", CustomExpression(JsonObjProjectionList(projections)))
+}
+
 // ----------------- Window functions  -------------------//
 
 // ROW_NUMBER returns number of the current row within its partition, counting from 1

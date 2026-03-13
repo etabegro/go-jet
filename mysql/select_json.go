@@ -11,6 +11,7 @@ type SelectJsonStatement interface {
 
 	AS(alias string) Projection
 
+	DISTINCT() SelectJsonStatement
 	FROM(table ReadableTable) SelectJsonStatement
 	WHERE(condition BoolExpression) SelectJsonStatement
 	ORDER_BY(orderByClauses ...OrderByClause) SelectJsonStatement
@@ -35,9 +36,10 @@ type selectJsonStatement struct {
 	statementType jet.StatementType
 
 	// SELECT_JSON_ARR internal clauses
-	arrOrderBy *jet.ClauseOrderBy
-	arrLimit   *jet.ClauseLimit
-	arrOffset  *jet.ClauseOffset
+	arrDistinct bool
+	arrOrderBy  *jet.ClauseOrderBy
+	arrLimit    *jet.ClauseLimit
+	arrOffset   *jet.ClauseOffset
 }
 
 func newSelectStatementJson(projections []Projection, statementType jet.StatementType) SelectJsonStatement {
@@ -61,7 +63,13 @@ func (s *selectJsonStatement) constructProjectionList() {
 	jsonProjection := Func("JSON_OBJECT", CustomExpression(jet.JsonObjProjectionList(s.projections)))
 
 	if s.statementType == jet.SelectJsonArrStatementType {
+		distinct := ""
+		if s.arrDistinct {
+			distinct = "DISTINCT "
+		}
+
 		jsonProjection = Func("JSON_ARRAYAGG", CustomExpression(
+			Token(distinct),
 			jsonProjection,
 			s.arrOrderBy,
 			s.arrLimit,
@@ -70,6 +78,16 @@ func (s *selectJsonStatement) constructProjectionList() {
 	}
 
 	s.Select.ProjectionList = ProjectionList{jsonProjection.AS("json")}
+}
+
+func (s *selectJsonStatement) DISTINCT() SelectJsonStatement {
+	if s.statementType == jet.SelectJsonArrStatementType {
+		s.arrDistinct = true
+	} else {
+		s.Select.Distinct = true
+	}
+
+	return s
 }
 
 func (s *selectJsonStatement) FROM(table ReadableTable) SelectJsonStatement {

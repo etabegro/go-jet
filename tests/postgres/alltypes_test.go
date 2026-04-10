@@ -1067,7 +1067,7 @@ func TestUInt64Overflow(t *testing.T) {
 
 	_, err := stmt.Exec(db)
 	if isPgxDriver() {
-		require.ErrorContains(t, err, "18446744073709551615 is greater than maximum value for Int8")
+		require.ErrorContains(t, err, "18446744073709551615 is greater than maximum value for int64")
 	} else {
 		require.ErrorContains(t, err, "sql: converting argument $1 type: uint64 values with high bit set are not supported")
 	}

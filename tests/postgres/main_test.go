@@ -12,7 +12,7 @@ import (
 	"github.com/go-jet/jet/v2/qrm"
 	"github.com/go-jet/jet/v2/stmtcache"
 	"github.com/go-jet/jet/v2/tests/internal/utils/repo"
-	"github.com/jackc/pgx/v4/stdlib"
+	"github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/go-jet/jet/v2/tests/dbconfig"
@@ -20,7 +20,7 @@ import (
 	"github.com/pkg/profile"
 	"github.com/stretchr/testify/require"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var ctx = context.Background()

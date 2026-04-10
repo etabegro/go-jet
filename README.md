@@ -67,7 +67,7 @@ https://medium.com/@go.jet/jet-5f3667efa0cc
 
 To install Jet package, you need to install Go and set your Go workspace first.
 
-[Go](https://golang.org/) **version 1.22+ is required**
+[Go](https://golang.org/) **version 1.24+ is required**
 
 ### Installation
 

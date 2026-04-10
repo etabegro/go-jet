@@ -208,6 +208,84 @@ FROM dvds.actor;
 		require.Equal(t, dest, savedActors[10:15])
 	})
 
+	t.Run("distinct", func(t *testing.T) {
+		stmt := SELECT_JSON_ARR(
+			Actor.LastName.AS("lastName"),
+		).FROM(Actor).
+			DISTINCT().
+			ORDER_BY(Actor.LastName.ASC())
+
+		testutils.AssertStatementSql(t, stmt, `
+SELECT JSON_ARRAYAGG(DISTINCT JSON_OBJECT(
+          'lastName', actor.last_name
+     )
+     ORDER BY actor.last_name ASC) AS "json"
+FROM dvds.actor;
+`)
+
+		var dest []struct {
+			LastName string
+		}
+
+		err := stmt.Query(db, &dest)
+		require.NoError(t, err)
+
+		var expected []struct {
+			LastName string
+		}
+
+		err = SELECT(
+			Actor.LastName.AS("lastName"),
+		).FROM(Actor).
+			GROUP_BY(Actor.LastName).
+			ORDER_BY(Actor.LastName.ASC()).
+			Query(db, &expected)
+		require.NoError(t, err)
+
+		require.Equal(t, expected, dest)
+		requireLogged(t, stmt)
+		requireQueryLogged(t, stmt, 1)
+	})
+
+}
+
+func TestSelectJsonObj_DistinctSQL(t *testing.T) {
+	onlyMariaDB(t)
+
+	stmt := SELECT_JSON_OBJ(Actor.ActorID.AS("actorID")).
+		FROM(Actor).
+		DISTINCT().
+		ORDER_BY(Actor.ActorID)
+
+	testutils.AssertStatementSql(t, stmt, `
+SELECT DISTINCT JSON_OBJECT(
+          'actorID', actor.actor_id
+     ) AS "json"
+FROM dvds.actor
+ORDER BY actor.actor_id;
+`)
+
+	var dest []struct {
+		ActorID int16
+	}
+
+	err := stmt.Query(db, &dest)
+	require.NoError(t, err)
+
+	var expected []struct {
+		ActorID int16
+	}
+
+	err = SELECT(
+		Actor.ActorID.AS("actorID"),
+	).FROM(Actor).
+		ORDER_BY(Actor.ActorID).
+		Query(db, &expected)
+	require.NoError(t, err)
+
+	require.Equal(t, expected, dest)
+	requireLogged(t, stmt)
+	requireQueryLogged(t, stmt, int64(len(expected)))
 }
 
 func TestSelectJsonArr_NestedArr(t *testing.T) {

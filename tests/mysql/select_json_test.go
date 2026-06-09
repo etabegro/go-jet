@@ -115,9 +115,9 @@ WHERE actor.actor_id = ?;
 		"LanguageID": 1,
 		"OriginalLanguageID": null,
 		"RentalDuration": 6,
-		"RentalRate": 2.99,
+		"RentalRate": "2.99",
 		"Length": 150,
-		"ReplacementCost": 17.99,
+		"ReplacementCost": "17.99",
 		"Rating": "PG-13",
 		"SpecialFeatures": "Trailers,Commentaries,Deleted Scenes",
 		"LastUpdate": "2006-02-15T05:03:42Z"
@@ -380,9 +380,9 @@ WHERE actor.actor_id BETWEEN 1 AND 3;
 				"LanguageID": 1,
 				"OriginalLanguageID": null,
 				"RentalDuration": 6,
-				"RentalRate": 2.99,
+				"RentalRate": "2.99",
 				"Length": 123,
-				"ReplacementCost": 26.99,
+				"ReplacementCost": "26.99",
 				"Rating": "NC-17",
 				"SpecialFeatures": "Commentaries,Deleted Scenes",
 				"LastUpdate": "2006-02-15T05:03:42Z"
@@ -395,9 +395,9 @@ WHERE actor.actor_id BETWEEN 1 AND 3;
 				"LanguageID": 1,
 				"OriginalLanguageID": null,
 				"RentalDuration": 7,
-				"RentalRate": 0.99,
+				"RentalRate": "0.99",
 				"Length": 114,
-				"ReplacementCost": 13.99,
+				"ReplacementCost": "13.99",
 				"Rating": "G",
 				"SpecialFeatures": "Trailers,Commentaries",
 				"LastUpdate": "2006-02-15T05:03:42Z"
@@ -418,9 +418,9 @@ WHERE actor.actor_id BETWEEN 1 AND 3;
 				"LanguageID": 1,
 				"OriginalLanguageID": null,
 				"RentalDuration": 3,
-				"RentalRate": 0.99,
+				"RentalRate": "0.99",
 				"Length": 82,
-				"ReplacementCost": 14.99,
+				"ReplacementCost": "14.99",
 				"Rating": "R",
 				"SpecialFeatures": "Trailers,Behind the Scenes",
 				"LastUpdate": "2006-02-15T05:03:42Z"
@@ -433,9 +433,9 @@ WHERE actor.actor_id BETWEEN 1 AND 3;
 				"LanguageID": 1,
 				"OriginalLanguageID": null,
 				"RentalDuration": 5,
-				"RentalRate": 4.99,
+				"RentalRate": "4.99",
 				"Length": 66,
-				"ReplacementCost": 25.99,
+				"ReplacementCost": "25.99",
 				"Rating": "G",
 				"SpecialFeatures": "Trailers,Commentaries,Deleted Scenes",
 				"LastUpdate": "2006-02-15T05:03:42Z"
@@ -582,4 +582,48 @@ func TestSelectJson_ProjectionNotAliased(t *testing.T) {
 
 		}, "jet: expression need to be aliased when used as SELECT JSON projection.")
 	})
+}
+
+func TestSelectJsonObject_EscapesJsonKeys(t *testing.T) {
+	stmt := SELECT_JSON_OBJ(
+		String("value").AS("author"),
+		String("value").AS("author's name"),
+		String("value").AS("author''s name"),
+		String("value").AS("author \"name\""),
+		String("value").AS(`C:\tmp\file`),
+		String("value").AS("hello\nworld"),
+		String("value").AS("a'b\\\\c\\nd\\r\\x00e\\x1af"),
+		String("value").AS("žika 😀"),
+	)
+
+	testutils.AssertDebugStatementSql(t, stmt, `
+SELECT JSON_OBJECT(
+          'author', 'value',
+          'author''s name', 'value',
+          'author''''s name', 'value',
+          'author "name"', 'value',
+          'C:\tmp\file', 'value',
+          'hello
+world', 'value',
+          'a''b\\c\nd\r\x00e\x1af', 'value',
+          'žika 😀', 'value'
+     ) AS "json";
+`)
+
+	var dest map[string]any
+
+	err := stmt.QueryContext(ctx, db, &dest)
+	require.NoError(t, err)
+	testutils.AssertJSON(t, dest, `
+{
+	"C:\tmpfile": "value",
+	"a'b\\c\nd\rx00ex1af": "value",
+	"author": "value",
+	"author \"name\"": "value",
+	"author''s name": "value",
+	"author's name": "value",
+	"hello\nworld": "value",
+	"žika 😀": "value"
+}
+`)
 }

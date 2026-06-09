@@ -131,14 +131,12 @@ func queryJson(ctx context.Context, db Queryable, query string, args []interface
 		return 1, err
 	}
 
-	if jsonData == nil {
-		return 1, nil
-	}
+	if jsonData != nil {
+		err = GlobalConfig.JsonUnmarshalFunc(jsonData, &destPtr)
 
-	err = GlobalConfig.JsonUnmarshalFunc(jsonData, &destPtr)
-
-	if err != nil {
-		return 1, fmt.Errorf("jet: invalid json, %w", err)
+		if err != nil {
+			return 1, fmt.Errorf("jet: invalid json, %w", err)
+		}
 	}
 
 	if rows.Next() {

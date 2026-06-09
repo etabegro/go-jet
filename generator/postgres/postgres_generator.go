@@ -80,7 +80,7 @@ func GenerateDB(db *sql.DB, schema, destDir string, templates ...template.Templa
 
 	err = template.ProcessSchema(destDir, schemaMetadata, generatorTemplate)
 	if err != nil {
-		return fmt.Errorf("failed to generate schema %s: %d", schemaMetadata.Name, err)
+		return fmt.Errorf("failed to generate schema %s: %w", schemaMetadata.Name, err)
 	}
 
 	return nil
